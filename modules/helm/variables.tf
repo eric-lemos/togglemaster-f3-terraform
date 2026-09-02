@@ -3,13 +3,13 @@ variable "helm" {
 
   type = object({
     packages = map(object({
-      name             = optional(string)
-      enabled          = optional(bool, true)
-      repository       = string
-      chart            = string
-      version          = optional(string)
-      namespace        = optional(string, "default")
-      values           = optional(map(any), {})
+      name       = optional(string)
+      enabled    = optional(bool, true)
+      repository = string
+      chart      = string
+      version    = optional(string)
+      namespace  = optional(string, "default")
+      values     = optional(map(any), {})
     }))
   })
 }
