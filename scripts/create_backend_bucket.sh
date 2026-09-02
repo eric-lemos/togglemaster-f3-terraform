@@ -2,8 +2,8 @@
 
 set -Eeuo pipefail
 
-readonly BUCKET_NAME="${BUCKET_NAME:-bkt-togglemaster-tfstate}"
-readonly AWS_REGION="${AWS_REGION:-us-east-1}"
+readonly BUCKET_NAME="${1:-${TF_BACKEND_BUCKET}}"
+readonly AWS_REGION="${2:-${AWS_REGION}}"
 
 checkPrerequisites() {
     command -v aws >/dev/null 2>&1 || {

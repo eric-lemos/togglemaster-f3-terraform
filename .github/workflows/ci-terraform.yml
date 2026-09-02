@@ -28,8 +28,9 @@ permissions:
     contents: read
 
 env:
-    AWS_REGION: us-east-1
     TF_IN_AUTOMATION: true
+    AWS_REGION: ${{ vars.AWS_REGION }}
+    TF_BACKEND_BUCKET: ${{ vars.TF_BACKEND_BUCKET }}
     TF_VAR_rds_instance_passwords: ${{ secrets.TF_VAR_RDS_INSTANCE_PASSWORDS }}
 
 jobs:
@@ -77,8 +78,14 @@ jobs:
               with:
                   terraform_version: "1.16.0"
 
+            - name: Create Terraform backend bucket
+              run: bash scripts/create_backend_bucket.sh "${{ env.TF_BACKEND_BUCKET }}" "${{ env.AWS_REGION }}"
+
             - name: Initialize Terraform
-              run: terraform init -input=false
+              run: |
+                  terraform init -input=false \
+                  -backend-config="bucket=${{ vars.TF_BACKEND_BUCKET }}" \
+                  -backend-config="region=${{ vars.AWS_REGION }}"
 
             - name: Generate plan
               run: terraform plan -input=false -out=tfplan
@@ -137,11 +144,14 @@ jobs:
               with:
                   terraform_version: "1.16.0"
 
+            - name: Create Terraform backend bucket
+              run: bash scripts/create_backend_bucket.sh "${{ env.TF_BACKEND_BUCKET }}" "${{ env.AWS_REGION }}"
+
             - name: Initialize Terraform
-              run: terraform init -input=false
+              run: terraform init -input=false -backend-config="bucket=${{ env.TF_BACKEND_BUCKET }}" -backend-config="region=${{ env.AWS_REGION }}"
 
             - name: Download approved plan
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v6
               with:
                   name: terraform-plan
                   path: .
@@ -173,8 +183,11 @@ jobs:
               with:
                   terraform_version: "1.16.0"
 
+            - name: Create Terraform backend bucket
+              run: bash scripts/create_backend_bucket.sh "${{ env.TF_BACKEND_BUCKET }}" "${{ env.AWS_REGION }}"
+
             - name: Initialize Terraform
-              run: terraform init -input=false
+              run: terraform init -input=false -backend-config="bucket=${{ env.TF_BACKEND_BUCKET }}" -backend-config="region=${{ env.AWS_REGION }}"
 
             - name: Destroy resources
               run: terraform destroy -auto-approve -input=false
