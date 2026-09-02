@@ -68,8 +68,8 @@ variable "security_groups" {
 
       ingress = optional(list(object({
         description               = optional(string)
-        from_port                 = number
-        to_port                   = number
+        from_port                 = optional(number)
+        to_port                   = optional(number)
         protocol                  = string
         cidr_ipv4                 = optional(string)
         cidr_ipv6                 = optional(string)
@@ -81,8 +81,8 @@ variable "security_groups" {
 
       egress = optional(list(object({
         description               = optional(string)
-        from_port                 = number
-        to_port                   = number
+        from_port                 = optional(number)
+        to_port                   = optional(number)
         protocol                  = string
         cidr_ipv4                 = optional(string)
         cidr_ipv6                 = optional(string)
@@ -93,8 +93,8 @@ variable "security_groups" {
         })), [
         {
           description = "Allow all egress"
-          from_port   = 0
-          to_port     = 0
+          from_port   = null
+          to_port     = null
           protocol    = "-1"
           cidr_ipv4   = "0.0.0.0/0"
         }
