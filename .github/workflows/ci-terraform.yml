@@ -14,12 +14,12 @@ on:
     workflow_dispatch:
         inputs:
             apply:
-                description: "Aplicar o plano Terraform gerado neste workflow"
+                description: "Apply"
                 required: true
                 default: false
                 type: boolean
-            DESTROY:
-                description: "Gerar e executar um plano de destroy"
+            destroy:
+                description: "Destroy"
                 required: true
                 default: false
                 type: boolean
@@ -37,7 +37,7 @@ jobs:
     validate:
         name: Validate
         runs-on: ubuntu-latest
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.DESTROY != 'true'
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.destroy != 'true'
         steps:
             - name: Check out repository
               uses: actions/checkout@v5
@@ -60,7 +60,7 @@ jobs:
         name: Plan
         needs: validate
         runs-on: ubuntu-latest
-        if: (github.event_name != 'workflow_dispatch' || github.event.inputs.DESTROY != 'true') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        if: (github.event_name != 'workflow_dispatch' || github.event.inputs.destroy != 'true') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
         steps:
             - name: Check out repository
               uses: actions/checkout@v5
@@ -107,7 +107,7 @@ jobs:
         name: Security
         needs: validate
         runs-on: ubuntu-latest
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.DESTROY != 'true'
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.destroy != 'true'
         steps:
             - name: Check out repository
               uses: actions/checkout@v5
@@ -126,7 +126,7 @@ jobs:
             - plan
             - security
         runs-on: ubuntu-latest
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.apply == 'true' && github.event.inputs.DESTROY != 'true' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.apply == 'true' && github.event.inputs.destroy != 'true' && github.ref == 'refs/heads/main'
         steps:
             - name: Check out repository
               uses: actions/checkout@v5
@@ -165,7 +165,7 @@ jobs:
     destroy:
         name: Destroy
         runs-on: ubuntu-latest
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.DESTROY == 'true' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.destroy == 'true' && github.ref == 'refs/heads/main'
         steps:
             - name: Check out repository
               uses: actions/checkout@v5
