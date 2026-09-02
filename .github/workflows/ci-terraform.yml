@@ -1,0 +1,146 @@
+name: Terraform CI
+
+on:
+    pull_request:
+        paths:
+            - "**/*.tf"
+            - ".github/workflows/ci-terraform.yml"
+    push:
+        branches:
+            - main
+        paths:
+            - "**/*.tf"
+            - ".github/workflows/ci-terraform.yml"
+    workflow_dispatch:
+        inputs:
+            apply:
+                description: "Aplicar o plano Terraform gerado neste workflow"
+                required: true
+                default: false
+                type: boolean
+
+permissions:
+    contents: read
+
+env:
+    AWS_REGION: us-east-1
+    TF_IN_AUTOMATION: true
+    TF_VAR_rds_instance_passwords: ${{ secrets.TF_VAR_RDS_INSTANCE_PASSWORDS }}
+
+jobs:
+    validate:
+        name: Validate
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v4
+
+            - name: Set up Terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                  terraform_version: "1.11.0"
+
+            - name: Check formatting
+              run: terraform fmt -check -recursive
+
+            - name: Initialize Terraform
+              run: terraform init -backend=false
+
+            - name: Validate configuration
+              run: terraform validate
+
+    planning:
+        name: Planning
+        needs: validate
+        runs-on: ubuntu-latest
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v4
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+                  aws-region: ${{ env.AWS_REGION }}
+
+            - name: Set up Terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                  terraform_version: "1.11.0"
+
+            - name: Initialize Terraform
+              run: terraform init -input=false
+
+            - name: Generate plan
+              run: terraform plan -input=false -out=tfplan
+
+            - name: Generate plan checksum
+              run: sha256sum tfplan > tfplan.sha256
+
+            - name: Upload plan artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: terraform-plan
+                  path: |
+                      tfplan
+                      tfplan.sha256
+                  if-no-files-found: error
+                  retention-days: 1
+
+    security:
+        name: Security
+        needs: validate
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v4
+
+            - name: Scan Terraform configuration
+              uses: aquasecurity/trivy-action@0.28.0
+              with:
+                  scan-type: config
+                  scan-ref: .
+                  severity: HIGH,CRITICAL
+                  exit-code: "1"
+
+    apply:
+        name: Apply
+        needs:
+            - planning
+            - security
+        runs-on: ubuntu-latest
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.apply == 'true' && github.ref == 'refs/heads/main'
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v4
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-region: ${{ env.AWS_REGION }}
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+            - name: Set up Terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                  terraform_version: "1.11.0"
+
+            - name: Initialize Terraform
+              run: terraform init -input=false
+
+            - name: Download approved plan
+              uses: actions/download-artifact@v4
+              with:
+                  name: terraform-plan
+                  path: .
+
+            - name: Verify plan checksum
+              run: sha256sum --check tfplan.sha256
+
+            - name: Apply approved plan
+              run: terraform apply -input=false tfplan
