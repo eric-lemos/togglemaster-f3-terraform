@@ -1,0 +1,34 @@
+# RDS
+
+Cria um DB subnet group e instâncias Amazon RDS PostgreSQL.
+
+## Entradas
+
+| Variável             | Descrição                                            |
+| -------------------- | ---------------------------------------------------- |
+| `rds`                | Subnet group e mapa de instâncias.                   |
+| `passwords`          | Mapa sensível de senhas, uma por chave de instância. |
+| `subnet_ids`         | IDs de subnets por chave lógica.                     |
+| `security_group_ids` | IDs de security groups por chave lógica.             |
+
+No módulo raiz, `passwords` recebe `rds_instance_passwords`. Não versione senhas.
+
+Para execução local, crie `secrets.auto.tfvars`:
+
+```hcl
+rds_instance_passwords = {
+  auth       = "REPLACE_WITH_A_STRONG_PASSWORD"
+  evaluation = "REPLACE_WITH_A_STRONG_PASSWORD"
+  flags      = "REPLACE_WITH_A_STRONG_PASSWORD"
+}
+```
+
+Na CI, configure o GitHub Secret `TF_VAR_RDS_INSTANCE_PASSWORDS` como JSON em uma linha, com as mesmas chaves. As senhas devem ter pelo menos oito caracteres e não podem conter `/`, `@`, aspas duplas ou espaços.
+
+## Saídas
+
+| Output                                              | Descrição                                  |
+| --------------------------------------------------- | ------------------------------------------ |
+| `db_subnet_group_name`                              | Nome do DB subnet group.                   |
+| `instance_endpoints`                                | Endpoints das instâncias por chave lógica. |
+| `instance_identifiers`, `instance_arns`, `db_names` | Metadados das instâncias.                  |
