@@ -127,8 +127,8 @@ security_groups = {
       ingress = [
         {
           description               = "Allow all traffic from itself"
-          from_port                 = null
-          to_port                   = null
+          from_port                 = -1
+          to_port                   = -1
           protocol                  = "-1"
           source_security_group_key = "eks-cluster"
         }
@@ -137,8 +137,8 @@ security_groups = {
       egress = [
         {
           description = "Allow all outbound"
-          from_port   = null
-          to_port     = null
+          from_port   = -1
+          to_port     = -1
           protocol    = "-1"
           cidr_ipv4   = "0.0.0.0/0"
         }

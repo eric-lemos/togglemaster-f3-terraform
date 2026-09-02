@@ -13,8 +13,8 @@ resource "aws_vpc_security_group_egress_rule" "this" {
 
   security_group_id = aws_security_group.this[each.value.sg_key].id
   description       = try(each.value.rule.description, null)
-  from_port         = each.value.rule.protocol == "-1" ? null : each.value.rule.from_port
-  to_port           = each.value.rule.protocol == "-1" ? null : each.value.rule.to_port
+  from_port         = each.value.rule.from_port
+  to_port           = each.value.rule.to_port
   ip_protocol       = each.value.rule.protocol
 
   cidr_ipv4      = try(each.value.rule.cidr_ipv4, null)

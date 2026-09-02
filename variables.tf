@@ -93,8 +93,8 @@ variable "security_groups" {
         })), [
         {
           description = "Allow all egress"
-          from_port   = null
-          to_port     = null
+          from_port   = -1
+          to_port     = -1
           protocol    = "-1"
           cidr_ipv4   = "0.0.0.0/0"
         }
