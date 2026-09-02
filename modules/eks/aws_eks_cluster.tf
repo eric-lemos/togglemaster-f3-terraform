@@ -8,6 +8,14 @@ resource "aws_eks_cluster" "this" {
     bootstrap_cluster_creator_admin_permissions = var.eks.cluster.bootstrap_cluster_creator_admin_permissions
   }
 
+  encryption_config {
+    provider {
+      key_arn = aws_kms_key.secrets.arn
+    }
+
+    resources = ["secrets"]
+  }
+
   vpc_config {
     subnet_ids              = [for key in concat(var.eks.cluster.public_subnet_keys, var.eks.cluster.private_subnet_keys) : var.subnet_ids[key]]
     security_group_ids      = [for key in var.eks.cluster.security_group_keys : var.security_group_ids[key]]

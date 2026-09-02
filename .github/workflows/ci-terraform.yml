@@ -55,8 +55,8 @@ jobs:
             - name: Validate configuration
               run: terraform validate
 
-    planning:
-        name: Planning
+    plan:
+        name: Plan
         needs: validate
         runs-on: ubuntu-latest
         if: (github.event_name != 'workflow_dispatch' || github.event.inputs.DESTROY != 'true') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
@@ -116,7 +116,7 @@ jobs:
     apply:
         name: Apply
         needs:
-            - planning
+            - plan
             - security
         runs-on: ubuntu-latest
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.apply == 'true' && github.event.inputs.DESTROY != 'true' && github.ref == 'refs/heads/main'
