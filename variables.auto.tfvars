@@ -213,23 +213,23 @@ eks = {
 # -------------------------------------------
 # HELM
 # -------------------------------------------
-helm = {
-  packages = {
-    metrics-server = {
-      repository = "https://kubernetes-sigs.github.io/metrics-server/"
-      chart      = "metrics-server"
-      version    = "3.14.0"
-      namespace  = "kube-system"
-    }
+# helm = {
+#   packages = {
+#     metrics-server = {
+#       repository = "https://kubernetes-sigs.github.io/metrics-server/"
+#       chart      = "metrics-server"
+#       version    = "3.14.0"
+#       namespace  = "kube-system"
+#     }
 
-    argocd = {
-      repository = "https://argoproj.github.io/argo-helm"
-      chart      = "argo-cd"
-      version    = "10.6.0"
-      namespace  = "argocd"
-    }
-  }
-}
+#     argocd = {
+#       repository = "https://argoproj.github.io/argo-helm"
+#       chart      = "argo-cd"
+#       version    = "10.6.0"
+#       namespace  = "argocd"
+#     }
+#   }
+# }
 
 # -------------------------------------------
 # RDS
