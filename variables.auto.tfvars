@@ -226,9 +226,9 @@ rds = {
       security_group_keys = ["rds"]
     }
 
-    evaluation = {
-      identifier          = "togglemaster-evaluation"
-      username            = "evaluation_admin"
+    targeting = {
+      identifier          = "togglemaster-targeting"
+      username            = "targeting_admin"
       security_group_keys = ["rds"]
     }
 
