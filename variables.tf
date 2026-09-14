@@ -296,6 +296,7 @@ variable "ecr" {
     repositories = map(object({
       name                 = optional(string)
       image_tag_mutability = optional(string, "IMMUTABLE")
+      force_delete         = optional(bool, true)
       scan_on_push         = optional(bool, true)
       tags                 = optional(map(string), {})
     }))

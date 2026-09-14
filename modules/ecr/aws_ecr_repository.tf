@@ -3,6 +3,8 @@ resource "aws_ecr_repository" "this" {
 
   name                 = coalesce(each.value.name, each.key)
   image_tag_mutability = each.value.image_tag_mutability
+  force_delete         = try(each.value.force_delete, true)
+
   image_scanning_configuration {
     scan_on_push = each.value.scan_on_push
   }
