@@ -84,10 +84,10 @@ if [[ -n "$VPC_ID" && "$VPC_ID" != "None" && "$VPC_ID" != "null" ]]; then
     echo "--> VPC identificada: $VPC_ID"
 
     # Forçar desanexação e exclusão de ENIs não gerenciadas pelo Terraform (criadas por ELB, EKS CNI, etc.)
-    ENIS=$(aws ec2 describe-network-interfaces --region "$AWS_REGION" --filters "Name=vpc-id,Values=$VPC_ID" --query 'NetworkInterfaces[*].[NetworkInterfaceId,Status,Attachment.AttachmentId,Description]' --output text 2>/dev/null || true)
+    ENIS=$(aws ec2 describe-network-interfaces --region "$AWS_REGION" --filters "Name=vpc-id,Values=$VPC_ID" --query 'NetworkInterfaces[*].[NetworkInterfaceId,Status,Attachment.AttachmentId]' --output text 2>/dev/null || true)
     
     if [[ -n "$ENIS" ]]; then
-        echo "$ENIS" | while read -r eni_id status attach_id desc; do
+        echo "$ENIS" | while read -r eni_id status attach_id; do
             if [[ -n "$eni_id" ]]; then
                 # Se estiver em uso com attachment, tenta desanexar
                 if [[ "$status" == "in-use" && -n "$attach_id" && "$attach_id" != "None" && "$attach_id" != "null" ]]; then
