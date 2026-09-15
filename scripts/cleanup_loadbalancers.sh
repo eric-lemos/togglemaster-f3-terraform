@@ -76,7 +76,33 @@ if [[ -n "$ECR_REPOS" ]]; then
     done
 fi
 
-echo "==> Aguardando 45 segundos para que as ENIs e IPs públicos sejam liberados pela AWS..."
-sleep 45
+# 4. Limpeza de ENIs órfãs (Network Interfaces) e Security Groups residuais na VPC
+echo "==> Verificando dependências de rede na VPC (ENIs residuais)..."
+VPC_ID=$(aws ec2 describe-vpcs --region "$AWS_REGION" --filters "Name=tag:Name,Values=togglemaster-vpc" --query 'Vpcs[0].VpcId' --output text 2>/dev/null || true)
+
+if [[ -n "$VPC_ID" && "$VPC_ID" != "None" && "$VPC_ID" != "null" ]]; then
+    echo "--> VPC identificada: $VPC_ID"
+
+    # Forçar desanexação e exclusão de ENIs não gerenciadas pelo Terraform (criadas por ELB, EKS CNI, etc.)
+    ENIS=$(aws ec2 describe-network-interfaces --region "$AWS_REGION" --filters "Name=vpc-id,Values=$VPC_ID" --query 'NetworkInterfaces[*].[NetworkInterfaceId,Status,Attachment.AttachmentId,Description]' --output text 2>/dev/null || true)
+    
+    if [[ -n "$ENIS" ]]; then
+        echo "$ENIS" | while read -r eni_id status attach_id desc; do
+            if [[ -n "$eni_id" ]]; then
+                # Se estiver em uso com attachment, tenta desanexar
+                if [[ "$status" == "in-use" && -n "$attach_id" && "$attach_id" != "None" && "$attach_id" != "null" ]]; then
+                    echo "--> Desanexando ENI: $eni_id (attachment: $attach_id)"
+                    aws ec2 detach-network-interface --attachment-id "$attach_id" --force --region "$AWS_REGION" 2>/dev/null || true
+                    sleep 2
+                fi
+                echo "--> Excluindo ENI residual: $eni_id"
+                aws ec2 delete-network-interface --network-interface-id "$eni_id" --region "$AWS_REGION" 2>/dev/null || true
+            fi
+        done
+    fi
+fi
+
+echo "==> Aguardando 30 segundos para que todos os recursos e interfaces sejam liberados pela AWS..."
+sleep 30
 
 echo "==> Limpeza de pré-destroy concluída com sucesso!"
