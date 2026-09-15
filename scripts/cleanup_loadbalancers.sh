@@ -61,7 +61,22 @@ if [[ -n "$V2_ELBS" ]]; then
     done
 fi
 
+# 3. Limpeza de Imagens nos Repositórios ECR (evita RepositoryNotEmptyException)
+echo "==> Esvaziando imagens de todos os repositórios ECR do projeto..."
+ECR_REPOS=$(aws ecr describe-repositories --region "$AWS_REGION" --query 'repositories[*].repositoryName' --output text 2>/dev/null || true)
+if [[ -n "$ECR_REPOS" ]]; then
+    for repo in $ECR_REPOS; do
+        if [[ "$repo" == togglemaster/* ]]; then
+            echo "--> Removendo imagens do repositório ECR: $repo"
+            IMAGE_IDS=$(aws ecr list-images --repository-name "$repo" --region "$AWS_REGION" --query 'imageIds[*]' --output json 2>/dev/null || true)
+            if [[ -n "$IMAGE_IDS" && "$IMAGE_IDS" != "[]" && "$IMAGE_IDS" != "null" ]]; then
+                aws ecr batch-delete-image --repository-name "$repo" --region "$AWS_REGION" --image-ids "$IMAGE_IDS" >/dev/null 2>&1 || true
+            fi
+        fi
+    done
+fi
+
 echo "==> Aguardando 45 segundos para que as ENIs e IPs públicos sejam liberados pela AWS..."
 sleep 45
 
-echo "==> Limpeza de Load Balancers concluída com sucesso!"
+echo "==> Limpeza de pré-destroy concluída com sucesso!"
