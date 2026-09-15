@@ -180,6 +180,9 @@ jobs:
         with:
           terraform_version: "1.16.0"
 
+      - name: Cleanup Load Balancers and K8s resources
+        run: bash scripts/cleanup_loadbalancers.sh "${{ env.AWS_REGION }}"
+
       - name: Initialize Terraform
         run: |
           terraform init -input=false \
